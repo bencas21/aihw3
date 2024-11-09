@@ -32,6 +32,7 @@ from learningAgents import ValueEstimationAgent
 import collections
 
 class ValueIterationAgent(ValueEstimationAgent):
+    # Got help from github copilot 
     """
         * Please read learningAgents.py before reading this.*
 
@@ -62,6 +63,17 @@ class ValueIterationAgent(ValueEstimationAgent):
     def runValueIteration(self):
         # Write value iteration code here
         "*** YOUR CODE HERE ***"
+        for _ in range(self.iterations):
+            new_values = util.Counter()
+            for state in self.mdp.getStates():
+                if self.mdp.isTerminal(state):
+                    continue
+                max_value = float('-inf')
+                for action in self.mdp.getPossibleActions(state):
+                    value = self.computeQValueFromValues(state, action)
+                    max_value = max(max_value, value)
+                new_values[state] = max_value
+            self.values = new_values
 
 
     def getValue(self, state):
@@ -77,6 +89,11 @@ class ValueIterationAgent(ValueEstimationAgent):
           value function stored in self.values.
         """
         "*** YOUR CODE HERE ***"
+        q = 0
+        for state_next, probability in self.mdp.getTransitionStatesAndProbs(state, action):
+            r = self.mdp.getReward(state, action, state_next)
+            q += probability * (r + (self.discount * self.values[state_next]))
+        return q
         util.raiseNotDefined()
 
     def computeActionFromValues(self, state):
@@ -89,6 +106,14 @@ class ValueIterationAgent(ValueEstimationAgent):
           terminal state, you should return None.
         """
         "*** YOUR CODE HERE ***"
+        best_action = None
+        best_value = float('-inf')
+        for action in self.mdp.getPossibleActions(state):
+            value = self.computeQValueFromValues(state, action)
+            if value > best_value:
+                best_value = value
+                best_action = action
+        return best_action
         util.raiseNotDefined()
 
     def getPolicy(self, state):
