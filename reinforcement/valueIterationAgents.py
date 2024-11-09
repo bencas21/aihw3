@@ -27,8 +27,10 @@
 
 
 import mdp, util
+import heapq
 
 from learningAgents import ValueEstimationAgent
+from util import PriorityQueue
 import collections
 
 class ValueIterationAgent(ValueEstimationAgent):
@@ -189,4 +191,3 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
 
     def runValueIteration(self):
         "*** YOUR CODE HERE ***"
-        

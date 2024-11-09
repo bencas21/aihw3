@@ -18,6 +18,7 @@
 
 # Set the given parameters to obtain the specified policies through
 # value iteration.
+import subprocess
 
 def question2():
     answerDiscount = 0.9
@@ -59,11 +60,31 @@ def question3e():
     return answerDiscount, answerNoise, answerLivingReward
     # If not possible, return 'NOT POSSIBLE'
 
+
 def question8():
-    answerEpsilon = None
-    answerLearningRate = None
-    return answerEpsilon, answerLearningRate
-    # If not possible, return 'NOT POSSIBLE'
+    epsilon_values = [0.1, 0.05, 0.01, 0.0]
+    learning_rates = [0.2, 0.5, 0.8, 1.0]
+
+    for epsilon in epsilon_values:
+        for lr in learning_rates:
+            result = run_experiment(epsilon, lr)
+
+            if result >= 0.99:
+                return (epsilon, lr)
+
+    return "NOT POSSIBLE"
+
+
+def run_experiment(epsilon, learning_rate):
+    command = f"python gridworld.py -a q -k 50 -n 0 -g BridgeGrid -e {epsilon} -l {learning_rate}"
+    result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+
+    if "Optimal Policy Learned" in result.stdout:
+        return 1
+    else:
+        return 0
+
+
 
 if __name__ == '__main__':
     print('Answers to analysis questions:')

@@ -15,6 +15,9 @@
 from game import *
 from learningAgents import ReinforcementAgent
 from featureExtractors import *
+from featureExtractors import SimpleExtractor
+
+import util
 
 import random,util,math
 
@@ -43,6 +46,7 @@ class QLearningAgent(ReinforcementAgent):
         ReinforcementAgent.__init__(self, **args)
 
         "*** YOUR CODE HERE ***"
+        self.qValues = util.Counter()
 
     def getQValue(self, state, action):
         """
@@ -51,7 +55,7 @@ class QLearningAgent(ReinforcementAgent):
           or the Q node value otherwise
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.qValues[(state, action)]
 
 
     def computeValueFromQValues(self, state):
@@ -62,7 +66,10 @@ class QLearningAgent(ReinforcementAgent):
           terminal state, you should return a value of 0.0.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        legal = self.getLegalActions(state)
+        if len(legal) == 0:
+            return 0.0
+        return max(self.getQValue(state, action) for action in legal)
 
     def computeActionFromQValues(self, state):
         """
@@ -71,7 +78,22 @@ class QLearningAgent(ReinforcementAgent):
           you should return None.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        actions = self.getLegalActions(state)
+
+        if len(actions) == 0:
+            return None
+
+        maxQ = float('-inf')
+
+        optimal = []
+        for action in actions:
+            qValue = self.getQValue(state, action)
+            if qValue > maxQ:
+                maxQ = qValue
+                optimal = [action]
+            elif qValue == maxQ:
+                optimal.append(action)
+        return random.choice(optimal)  # Randomly select among best actions
 
     def getAction(self, state):
         """
@@ -84,13 +106,14 @@ class QLearningAgent(ReinforcementAgent):
           HINT: You might want to use util.flipCoin(prob)
           HINT: To pick randomly from a list, use random.choice(list)
         """
-        # Pick Action
         legalActions = self.getLegalActions(state)
-        action = None
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        if len(legalActions) == 0:
+            return None
 
-        return action
+        if util.flipCoin(self.epsilon):
+            return random.choice(legalActions)  #
+        else:
+            return self.computeActionFromQValues(state)
 
     def update(self, state, action, nextState, reward):
         """
@@ -102,7 +125,10 @@ class QLearningAgent(ReinforcementAgent):
           it will be called on your behalf
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        nextQ = self.computeValueFromQValues(nextState)
+        currentQ = self.getQValue(state, action)
+        newQ = currentQ + self.alpha * (reward + self.discount * nextQ - currentQ)
+        self.qValues[(state, action)] = newQ
 
     def getPolicy(self, state):
         return self.computeActionFromQValues(state)
@@ -144,43 +170,66 @@ class PacmanQAgent(QLearningAgent):
 
 
 class ApproximateQAgent(PacmanQAgent):
-    """
-       ApproximateQLearningAgent
-
-       You should only have to overwrite getQValue
-       and update.  All other QLearningAgent functions
-       should work as is.
-    """
     def __init__(self, extractor='IdentityExtractor', **args):
-        self.featExtractor = util.lookup(extractor, globals())()
-        PacmanQAgent.__init__(self, **args)
+        """
+        Initialize ApproximateQAgent.
+
+        If no extractor is passed, default to IdentityExtractor.
+        """
+        # Set up the feature extractor (by default, use IdentityExtractor)
+        if extractor == 'IdentityExtractor':
+            self.featExtractor = IdentityExtractor()
+        else:
+            # If another extractor is passed, use that
+            self.featExtractor = extractor()
+
+        # Initialize the weights for features
         self.weights = util.Counter()
 
-    def getWeights(self):
-        return self.weights
+        # Initialize the parent class (QLearningAgent)
+        super().__init__(**args)
 
     def getQValue(self, state, action):
         """
-          Should return Q(state,action) = w * featureVector
-          where * is the dotProduct operator
+        Return the Q-value for a state-action pair.
+        In Approximate Q-learning, Q-value is the dot product of feature values and weights.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        features = self.featExtractor.getFeatures(state, action)
+        return sum([self.weights[feature] * value for feature, value in features.items()])
 
     def update(self, state, action, nextState, reward):
         """
-           Should update your weights based on transition
+        Update the weights based on the Q-value update rule.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        features = self.featExtractor.getFeatures(state, action)
+        q_value = self.getQValue(state, action)
+        max_q_next = self.getMaxQ(nextState)
+        error = (reward + self.discount * max_q_next) - q_value
 
-    def final(self, state):
-        "Called at the end of each game."
-        # call the super-class final method
-        PacmanQAgent.final(self, state)
+        for feature, value in features.items():
+            self.weights[feature] += self.alpha * error * value
 
-        # did we finish training?
-        if self.episodesSoFar == self.numTraining:
-            # you might want to print your weights here for debugging
-            "*** YOUR CODE HERE ***"
-            pass
+    def getAction(self, state):
+        return self.getPolicy(state)
+
+    def getPolicy(self, state):
+        possible_actions = state.getLegalActions()
+        best_action = None
+        best_q_value = float("-inf")
+
+        for action in possible_actions:
+            q_value = self.getQValue(state, action)
+            if q_value > best_q_value:
+                best_q_value = q_value
+                best_action = action
+
+        return best_action
+
+    def getValue(self, state):
+        return self.getQValue(state, self.getPolicy(state))
+
+    def getWeights(self):
+        """
+        Return the weights associated with the features.
+        """
+        return self.weights
