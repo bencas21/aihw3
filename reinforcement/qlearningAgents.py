@@ -167,6 +167,7 @@ class PacmanQAgent(QLearningAgent):
 
 
 class ApproximateQAgent(PacmanQAgent):
+    # got help from github copilot
     """
        ApproximateQLearningAgent
 
@@ -188,6 +189,12 @@ class ApproximateQAgent(PacmanQAgent):
           where * is the dotProduct operator
         """
         "*** YOUR CODE HERE ***"
+        features = self.featExtractor.getFeatures(state, action)
+        qValue = 0
+        for feature in features:
+            qValue += self.weights[feature] * features[feature]
+        return qValue
+    
         util.raiseNotDefined()
 
     def update(self, state, action, nextState, reward):
@@ -195,6 +202,12 @@ class ApproximateQAgent(PacmanQAgent):
            Should update your weights based on transition
         """
         "*** YOUR CODE HERE ***"
+        features = self.featExtractor.getFeatures(state, action)
+        difference = (reward + self.discount * self.computeValueFromQValues(nextState)) - self.getQValue(state, action)
+        for feature in features:
+            self.weights[feature] += self.alpha * difference * features[feature]
+        return self.weights
+    
         util.raiseNotDefined()
 
     def final(self, state):
@@ -207,3 +220,6 @@ class ApproximateQAgent(PacmanQAgent):
             # you might want to print your weights here for debugging
             "*** YOUR CODE HERE ***"
             pass
+
+
+        

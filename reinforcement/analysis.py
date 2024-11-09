@@ -61,6 +61,7 @@ def question3e():
     # If not possible, return 'NOT POSSIBLE'
 
 
+# got help from chatgpt
 def question8():
     epsilon_values = [0.1, 0.05, 0.01, 0.0]
     learning_rates = [0.2, 0.5, 0.8, 1.0]
