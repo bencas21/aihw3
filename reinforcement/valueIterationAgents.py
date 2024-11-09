@@ -191,3 +191,44 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
 
     def runValueIteration(self):
         "*** YOUR CODE HERE ***"
+        predecessors = self.initializePredecessors()
+        queue = util.PriorityQueue()
+
+        for state in self.mdp.getStates():
+            self.updateQueueForState(state, queue)
+
+        for _ in range(self.iterations):
+            if queue.isEmpty():
+                break
+
+            state = queue.pop()
+            if not self.mdp.isTerminal(state):
+                max_value = float('-inf')
+                for action in self.mdp.getPossibleActions(state):
+                    value = self.computeQValueFromValues(state, action)
+                    max_value = max(max_value, value)
+                self.values[state] = max_value
+
+            for predecessor in predecessors[state]:
+                self.updateQueueForState(predecessor, queue)
+
+    def initializePredecessors(self):
+        predecessors = {state: set() for state in self.mdp.getStates()}
+
+        for state in self.mdp.getStates():
+            for action in self.mdp.getPossibleActions(state):
+                for next_state, _ in self.mdp.getTransitionStatesAndProbs(state, action):
+                    predecessors[next_state].add(state)
+
+        return predecessors
+
+    def updateQueueForState(self, state, queue):
+        if not self.mdp.isTerminal(state):
+            max_value = float('-inf')
+
+            for action in self.mdp.getPossibleActions(state):
+                value = self.computeQValueFromValues(state, action)
+                max_value = max(max_value, value)
+
+            diff = abs(self.values[state] - max_value)
+            queue.update(state, -diff)

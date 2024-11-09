@@ -15,9 +15,6 @@
 from game import *
 from learningAgents import ReinforcementAgent
 from featureExtractors import *
-from featureExtractors import SimpleExtractor
-
-import util
 
 import random,util,math
 
@@ -170,66 +167,43 @@ class PacmanQAgent(QLearningAgent):
 
 
 class ApproximateQAgent(PacmanQAgent):
+    """
+       ApproximateQLearningAgent
+
+       You should only have to overwrite getQValue
+       and update.  All other QLearningAgent functions
+       should work as is.
+    """
     def __init__(self, extractor='IdentityExtractor', **args):
-        """
-        Initialize ApproximateQAgent.
-
-        If no extractor is passed, default to IdentityExtractor.
-        """
-        # Set up the feature extractor (by default, use IdentityExtractor)
-        if extractor == 'IdentityExtractor':
-            self.featExtractor = IdentityExtractor()
-        else:
-            # If another extractor is passed, use that
-            self.featExtractor = extractor()
-
-        # Initialize the weights for features
+        self.featExtractor = util.lookup(extractor, globals())()
+        PacmanQAgent.__init__(self, **args)
         self.weights = util.Counter()
 
-        # Initialize the parent class (QLearningAgent)
-        super().__init__(**args)
+    def getWeights(self):
+        return self.weights
 
     def getQValue(self, state, action):
         """
-        Return the Q-value for a state-action pair.
-        In Approximate Q-learning, Q-value is the dot product of feature values and weights.
+          Should return Q(state,action) = w * featureVector
+          where * is the dotProduct operator
         """
-        features = self.featExtractor.getFeatures(state, action)
-        return sum([self.weights[feature] * value for feature, value in features.items()])
+        "*** YOUR CODE HERE ***"
+        util.raiseNotDefined()
 
     def update(self, state, action, nextState, reward):
         """
-        Update the weights based on the Q-value update rule.
+           Should update your weights based on transition
         """
-        features = self.featExtractor.getFeatures(state, action)
-        q_value = self.getQValue(state, action)
-        max_q_next = self.getMaxQ(nextState)
-        error = (reward + self.discount * max_q_next) - q_value
+        "*** YOUR CODE HERE ***"
+        util.raiseNotDefined()
 
-        for feature, value in features.items():
-            self.weights[feature] += self.alpha * error * value
+    def final(self, state):
+        "Called at the end of each game."
+        # call the super-class final method
+        PacmanQAgent.final(self, state)
 
-    def getAction(self, state):
-        return self.getPolicy(state)
-
-    def getPolicy(self, state):
-        possible_actions = state.getLegalActions()
-        best_action = None
-        best_q_value = float("-inf")
-
-        for action in possible_actions:
-            q_value = self.getQValue(state, action)
-            if q_value > best_q_value:
-                best_q_value = q_value
-                best_action = action
-
-        return best_action
-
-    def getValue(self, state):
-        return self.getQValue(state, self.getPolicy(state))
-
-    def getWeights(self):
-        """
-        Return the weights associated with the features.
-        """
-        return self.weights
+        # did we finish training?
+        if self.episodesSoFar == self.numTraining:
+            # you might want to print your weights here for debugging
+            "*** YOUR CODE HERE ***"
+            pass

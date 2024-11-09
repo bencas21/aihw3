@@ -74,7 +74,7 @@ def question8():
 
     return "NOT POSSIBLE"
 
-
+#used chat gpt to
 def run_experiment(epsilon, learning_rate):
     command = f"python gridworld.py -a q -k 50 -n 0 -g BridgeGrid -e {epsilon} -l {learning_rate}"
     result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
